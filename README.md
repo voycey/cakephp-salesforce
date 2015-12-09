@@ -7,7 +7,7 @@ You can install this plugin into your CakePHP application using [composer](http:
 The recommended way to install composer packages is:
 
 ```
-composer require voycey/Salesforce-CakePHP-Datasource-3.x
+composer require voycey/salesforce-datasource-cakephp-3.x
 ```
 
 ## Information
