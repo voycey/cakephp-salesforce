@@ -1,0 +1,24 @@
+{
+    "name": "voycey/salesforce-datasource-cakephp-3.x",
+    "description": "Salesforce plugin for CakePHP 3.x",
+    "type": "cakephp-plugin",
+    "require": {
+        "php": ">=5.4.16",
+        "cakephp/cakephp": "~3.0",
+        "developerforce/force.com-toolkit-for-php": "^1.0@dev"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "Salesforce\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Salesforce\\Test\\": "tests",
+            "Cake\\Test\\": "./vendor/cakephp/cakephp/tests"
+        }
+    }
+}
