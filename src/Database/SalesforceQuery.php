@@ -30,7 +30,7 @@ use RuntimeException;
  * for dynamically constructing each query part, execute it and transform it
  * to a specific SQL dialect.
  */
-class MyQuery extends Query
+class SalesforceQuery extends Query
 {
     /**
      * Returns the SQL representation of this object.

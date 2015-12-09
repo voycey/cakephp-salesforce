@@ -20,7 +20,7 @@ use Cake\Database\QueryCompiler;
  *
  * @internal
  */
-class MyQueryCompiler extends QueryCompiler
+class SalesforceQueryCompiler extends QueryCompiler
 {
     /**
      * Helper function used to build the string representation of a SELECT clause,

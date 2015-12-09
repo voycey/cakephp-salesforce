@@ -26,7 +26,7 @@ use PDOException;
  * Used to access information about the tables,
  * and other data in a database.
  */
-class MyCollection extends Collection
+class SalesforceCollection extends Collection
 {
 
     /**

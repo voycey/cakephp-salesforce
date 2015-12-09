@@ -30,7 +30,7 @@ use SplFixedArray;
  * queries required for eager loading external associations.
  *
  */
-class MyResultSet extends ResultSet
+class SalesforceResultSet extends ResultSet
 {
     /**
      * Creates a map of row keys out of the query select clause that can be

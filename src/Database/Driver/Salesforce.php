@@ -16,8 +16,8 @@ namespace Salesforce\Database\Driver;
 
 use Salesforce\Database\Dialect\SalesforceDialectTrait;
 use Salesforce\Database\Driver\SalesforceDriverTrait;
-use Salesforce\Database\MyQueryCompiler;
-use Salesforce\Database\MyQuery;
+use Salesforce\Database\SalesforceQueryCompiler;
+use Salesforce\Database\SalesforceQuery;
 use Salesforce\Database\Statement\SalesforceStatement;
 use Cake\Database\Driver;
 
@@ -86,7 +86,7 @@ class Salesforce extends Driver
     public function prepare($query)
     {
         $this->connect();
-        $isObject = $query instanceof MyQuery;
+        $isObject = $query instanceof SalesforceQuery;
         //$statement = $this->_connection->prepare($isObject ? $query->sql() : $query);
         $result = new SalesforceStatement($query, $this);
         if ($isObject && $query->bufferResults() === false) {
@@ -110,7 +110,7 @@ class Salesforce extends Driver
      */
     public function newCompiler()
     {
-        return new MyQueryCompiler;
+        return new SalesforceQueryCompiler;
     }
 
     /**

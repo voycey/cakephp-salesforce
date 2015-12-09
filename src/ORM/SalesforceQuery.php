@@ -15,8 +15,8 @@
 namespace Salesforce\ORM;
 
 use ArrayObject;
-use Salesforce\ORM\ResultSet;
-use Salesforce\Database\MyQuery as MyDatabaseQuery;
+use Salesforce\ORM\SalesforceResultSet;
+use Salesforce\Database\SalesforceQuery as SalesforceDatabaseQuery;
 use Cake\ORM\Query;
 
 use Cake\Database\ValueBinder;
@@ -29,7 +29,7 @@ use Cake\Database\ValueBinder;
  * required.
  *
  */
-class MyQuery extends Query
+class SalesforceQuery extends Query
 {
     public $queryString = "";
 
@@ -48,7 +48,7 @@ class MyQuery extends Query
             return new $decorator($this->_results);
         }
         $statement = $this->eagerLoader()->loadExternal($this, $this->execute());
-        return new MyResultSet($this, $statement);
+        return new SalesforceResultSet($this, $statement);
     }
 
     /**
@@ -60,7 +60,7 @@ class MyQuery extends Query
 
         $this->_transformQuery();
 
-        $sql = MyDatabaseQuery::sql(null, $this);
+        $sql = SalesforceDatabaseQuery::sql(null, $this);
 
         return $sql;
     }

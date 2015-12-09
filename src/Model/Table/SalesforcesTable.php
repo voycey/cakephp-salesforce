@@ -2,8 +2,8 @@
 namespace Salesforce\Model\Table;
 
 use Salesforce\Model\Entity\Salesforce;
-use Salesforce\ORM\MyQuery;
-use Salesforce\ORM\MyTable;
+use Salesforce\ORM\SalesforceQuery;
+use Salesforce\ORM\SalesforceTable;
 use Cake\Utility\Xml;
 use Cake\Utility\Hash;
 
@@ -14,7 +14,7 @@ use Cake\Utility\Hash;
  * @property \Cake\ORM\Association\HasMany $QuestionParts
  * @property \Cake\ORM\Association\BelongsToMany $Pathways
  */
-class SalesforcesTable extends MyTable
+class SalesforcesTable extends SalesforceTable
 {
     public $schema = array();
 

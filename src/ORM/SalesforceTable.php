@@ -14,17 +14,17 @@
  */
 namespace Salesforce\ORM;
 
-use Salesforce\ORM\Query;
+use Salesforce\ORM\SalesforceQuery;
 use Cake\ORM\Table;
 
 
-class MyTable extends Table
+class SalesforceTable extends Table
 {
     /**
      * {@inheritDoc}
      */
     public function query()
     {
-        return new MyQuery($this->connection(), $this);
+        return new SalesforceQuery($this->connection(), $this);
     }
 }

@@ -14,7 +14,7 @@
  */
 namespace Salesforce\Database;
 
-use Salesforce\Database\Schema\MyCollection as SchemaCollection;
+use Salesforce\Database\Schema\SalesforceCollection as SchemaCollection;
 use Cake\Database\TypeConverterTrait;
 use Cake\Database\Connection;
 use Cake\Database\Exception\MissingConnectionException;
@@ -30,7 +30,7 @@ use Exception;
 /**
  * Represents a connection with a database server.
  */
-class MyConnection extends Connection
+class SalesforceConnection extends Connection
 {
     /**
      * Compiles a Query object into a SQL string according to the dialect for this
@@ -52,7 +52,7 @@ class MyConnection extends Connection
      */
     public function newQuery()
     {
-        return new MyQuery($this);
+        return new SalesforceQuery($this);
     }
 
     public function run($query)
