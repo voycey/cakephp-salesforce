@@ -39,7 +39,7 @@ class SalesforceStatement extends StatementDecorator
 
         //intercept Update here
         if ($this->_statement->type() == "update") {
-            $result = $this->_driver->client->update([$this->_interpolate($sql, $bindings, true)], $this->_statement->repository()->name);
+           $result = $this->_driver->client->update([$this->_interpolate($sql, $bindings, true)], $this->_statement->repository()->name);
         } else {
             $result = $this->_driver->client->query($this->_interpolate($sql, $bindings));
         }
@@ -65,7 +65,6 @@ class SalesforceStatement extends StatementDecorator
                    $sql = preg_replace('/'.$binding['placeholder'].'\b/i', "'".(int)$binding['value']."'", $sql);
                     break;
                 case "boolean":
-                    ()
                     $sql = preg_replace('/'.$binding['placeholder'].'\b/i', "'".(int)$binding['value']."'", $sql);
                     break;
                 case "datetime":
@@ -92,6 +91,11 @@ class SalesforceStatement extends StatementDecorator
             }
             //remove the WHERE clause
             array_pop($newSQL);
+
+            //remove empty / null values
+            $newSQL = array_filter($newSQL, 'strlen');
+
+            //return as object
             return (object)$newSQL;
         }
         return $sql;
