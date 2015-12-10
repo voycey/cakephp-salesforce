@@ -37,9 +37,13 @@ class SalesforceStatement extends StatementDecorator
         $sql = $this->_statement->sql();
         $bindings = $this->_statement->valueBinder()->bindings();
 
-        $newSQL = $this->_interpolate($sql, $bindings);
+        //intercept Update here
+        if ($this->_statement->type() == "update") {
+            $result = $this->_driver->client->update([$this->_interpolate($sql, $bindings, true)], $this->_statement->repository()->name);
+        } else {
+            $result = $this->_driver->client->query($this->_interpolate($sql, $bindings));
+        }
 
-        $result = $this->_driver->client->query($newSQL);
         $this->last_rows_affected = $result->size;
         $this->last_result = $result;
         return $result;
@@ -50,25 +54,49 @@ class SalesforceStatement extends StatementDecorator
      * params used to execute the query
      *
      * @param LoggedQuery $query The query to log
-     * @return string
+     * @return mixed
      */
-    protected function _interpolate($sql, $bindings)
+    protected function _interpolate($sql, $bindings, $sObject = false)
     {
         foreach ($bindings as $binding) {
+            $binding['placeholder'] = ":".$binding['placeholder'];
             switch ($binding['type']) {
                 case "integer":
-                   $sql = str_replace(":".$binding['placeholder'], $binding['value'], $sql);
+                   $sql = preg_replace('/'.$binding['placeholder'].'\b/i', "'".(int)$binding['value']."'", $sql);
                     break;
                 case "boolean":
-                    $sql = str_replace(":".$binding['placeholder'], "'".(bool) $binding['value']."'", $sql);
+                    ()
+                    $sql = preg_replace('/'.$binding['placeholder'].'\b/i', "'".(int)$binding['value']."'", $sql);
+                    break;
+                case "datetime":
+                    $sql = preg_replace('/'.$binding['placeholder'].'\b/i', "'". $binding['value']."'", $sql);
                     break;
                 default:
-                    $sql = str_replace(":".$binding['placeholder'], "'". $binding['value']."'", $sql);
+                    $sql = preg_replace('/'.$binding['placeholder'].'\b/i', "'". addslashes(trim($binding['value']))."'", $sql);
                     break;
             }
         }
+
+        if ($sObject) {
+            //slice and dice this into an SObject for Salesforce
+            $cleanedSQL = explode("' ", trim(substr($sql, strpos($sql, "SET ") +4 )));
+            $newSQL = [];
+            foreach ($cleanedSQL as $row) {
+                //verbose for clarity
+
+                $string = explode("=", str_replace("'", "", str_replace(", ", " ", $row)));
+                if (empty($string[1])) {
+                    $string[1] = NULL;
+                }
+                $newSQL[trim($string[0])] = trim($string[1]);
+            }
+            //remove the WHERE clause
+            array_pop($newSQL);
+            return (object)$newSQL;
+        }
         return $sql;
     }
+
 
     public function rowCount()
     {
