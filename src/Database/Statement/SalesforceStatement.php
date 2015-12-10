@@ -81,16 +81,19 @@ class SalesforceStatement extends StatementDecorator
             $cleanedSQL = explode("' ", trim(substr($sql, strpos($sql, "SET ") +4 )));
             $newSQL = [];
             foreach ($cleanedSQL as $row) {
-                //verbose for clarity
 
+                //verbose for clarity
                 $string = explode("=", str_replace("'", "", str_replace(", ", " ", $row)));
                 if (empty($string[1])) {
                     $string[1] = NULL;
                 }
-                $newSQL[trim($string[0])] = trim($string[1]);
+                //This needs to not be hardcoded "Id"
+                if($string[0] == "WHERE Id ") {
+                    $newSQL['Id'] = trim($string[1]);
+                } else {
+                    $newSQL[trim($string[0])] = trim($string[1]);
+                }
             }
-            //remove the WHERE clause
-            array_pop($newSQL);
 
             //remove empty / null values
             $newSQL = array_filter($newSQL, 'strlen');
