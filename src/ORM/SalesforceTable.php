@@ -16,8 +16,9 @@ namespace Salesforce\ORM;
 
 use \ArrayObject;
 use Cake\Datasource\EntityInterface;
-use Salesforce\ORM\SalesforceQuery;
 use Cake\ORM\Table;
+use Salesforce\ORM\SalesforceQuery;
+use Salesforce\ORM\SalesforceMarshaller;
 
 
 class SalesforceTable extends Table
@@ -84,5 +85,35 @@ class SalesforceTable extends Table
         }
 
         return $success;
+    }
+    /**
+    * {@inheritDoc}
+    */
+    public function newEntity($data = null, array $options = [])
+    {
+        if ($data === null) {
+            $class = $this->entityClass();
+            $entity = new $class([], ['source' => $this->registryAlias()]);
+            return $entity;
+        }
+        if (!isset($options['associated'])) {
+            $options['associated'] = $this->_associations->keys();
+        }
+        $marshaller = $this->marshaller();
+        return $marshaller->one($data, $options);
+    }
+
+    /**
+     * Get the object used to marshal/convert array data into objects.
+     *
+     * Override this method if you want a table object to use custom
+     * marshalling logic.
+     *
+     * @return \Cake\ORM\Marshaller
+     * @see \Cake\ORM\Marshaller
+     */
+    public function marshaller()
+    {
+        return new SalesforceMarshaller($this);
     }
 }

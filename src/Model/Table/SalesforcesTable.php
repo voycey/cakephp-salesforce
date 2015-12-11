@@ -17,6 +17,8 @@ use Cake\Utility\Hash;
 class SalesforcesTable extends SalesforceTable
 {
     public $schema = array();
+    public $updatable_fields = array();
+    public $selectable_fields = array();
 
     public static function defaultConnectionName() {
         return 'salesforce';
@@ -41,46 +43,53 @@ class SalesforcesTable extends SalesforceTable
             throw new \Exception("You need to provide a WSDL");
         }
 
-        $database_fields = Xml::toArray(Xml::build($wsdl));
-        $schemas = $database_fields['definitions']['types']['schema'][0]['complexType'];
+        $mySforceConnection = new \SforceEnterpriseClient();
+        $mySoapClient = $mySforceConnection->createConnection($wsdl);
 
-        $this_wsdl_schema = array();
-
-        foreach ($schemas as $schema) {
-            if($schema['@name'] == $this->name) {
-                $this_wsdl_schema = $schema['complexContent']['extension']['sequence']['element'];
-                break;
+        if(!empty($sflogin['sessionId'])) {
+            $mySforceConnection->setSessionHeader($sflogin['sessionId']);
+            $mySforceConnection->setEndPoint($sflogin['serverUrl']);
+        } else {
+            try{
+                $mylogin = $mySforceConnection->login($config['connection']->config()['username'],$config['connection']->config()['password']);
+                $sflogin = array('sessionId' => $mylogin->sessionId, 'serverUrl' => $mylogin->serverUrl);
+                //Cache::write('salesforce_login', $sflogin, 'short');
+            } catch (Exception $e) {
+                $this->log("Error logging into salesforce from Table - Salesforce down?");
             }
         }
 
-        $names = Hash::extract($this_wsdl_schema, '{n}.@name');
-        $types = Hash::extract($this_wsdl_schema, '{n}.@type');
+        $sforceSchema = $mySforceConnection->describeSObject($this->name);
 
-        $new_array = array(
-            'Id' => array('type' => 'string', 'length' => 16)
-        );
 
-        $n=0;
-        $type_name = "";
-        foreach ($names as $name) {
-            if(substr($types[$n],0,3) != "ens") { //we dont want type of ens
-                if(substr($types[$n],4) != "QueryResult") { //Or this
 
-                    if(substr($types[$n],4) == "int") {
-                        $type_name = "integer";
-                    } elseif (substr($types[$n],4) == "boolean") {
-                        $type_name = "boolean";
-                    } elseif (substr($types[$n],4) == "dateTime" || substr($types[$n],4) == "date") {
-                        $type_name = "datetime";
-                    } else {
-                        $type_name = "string";
-                    }
-
-                    $new_array[$name] = array('type' => $type_name, 'length' => 255);
+        foreach ($sforceSchema->fields as $field) {
+            if(substr($field->soapType,0,3) != "ens") { //we dont want type of ens
+                if(substr($field->soapType,4) == "int") {
+                    $type_name = "integer";
+                } elseif (substr($field->soapType,4) == "boolean") {
+                    $type_name = "boolean";
+                } elseif (substr($field->soapType,4) == "dateTime" || substr($field->soapType,4) == "date") {
+                    $type_name = "datetime";
+                } else {
+                    $type_name = "string";
+                }
+                if($field->updateable) {
+                    $this->updatable_fields[$field->name] = ['type' => $type_name, 'length' => $field->length, 'null' => $field->nillable];
+                    $this->selectable_fields[$field->name] = ['type' => $type_name, 'length' => $field->length, 'null' => $field->nillable];
+                } else {
+                    $this->selectable_fields[$field->name] = ['type' => $type_name, 'length' => $field->length, 'null' => $field->nillable];
                 }
             }
-            $n++;
         }
-        $this->schema($new_array);
+        $this->schema($this->updatable_fields);
+    }
+
+    public function beforeFind($event, $query, $options, $primary) {
+        $this->schema($this->selectable_fields);
+    }
+
+    public function beforeSave($event, $entity, $options) {
+        $this->schema($this->updatable_fields);
     }
 }

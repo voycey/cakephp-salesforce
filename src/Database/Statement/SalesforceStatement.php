@@ -39,7 +39,11 @@ class SalesforceStatement extends StatementDecorator
 
         //intercept Update here
         if ($this->_statement->type() == "update") {
-           $result = $this->_driver->client->update([$this->_interpolate($sql, $bindings, true)], $this->_statement->repository()->name);
+            $result = $this->_driver->client->update([$this->_interpolate($sql, $bindings, true)], $this->_statement->repository()->name);
+            if (empty($result->size)) {
+                $result = (object)json_decode(json_encode($result));
+                $result->size = 1;
+            }
         } else {
             $result = $this->_driver->client->query($this->_interpolate($sql, $bindings));
         }

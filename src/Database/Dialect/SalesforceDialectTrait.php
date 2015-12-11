@@ -70,7 +70,7 @@ trait SalesforceDialectTrait
      */
     public function disableForeignKeySQL()
     {
-        return 'SET foreign_key_checks = 0';
+        return '';
     }
 
     /**
@@ -78,7 +78,7 @@ trait SalesforceDialectTrait
      */
     public function enableForeignKeySQL()
     {
-        return 'SET foreign_key_checks = 1';
+        return '';
     }
 
 }
