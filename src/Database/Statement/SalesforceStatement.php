@@ -144,4 +144,37 @@ class SalesforceStatement extends StatementDecorator
         $this->last_row_returned++;
         return $result;
     }
+
+    /**
+     * Returns the error code for the last error that occurred when executing this statement.
+     *
+     * @return int|string
+     */
+    public function errorCode()
+    {
+        return '00000';
+    }
+
+    /**
+     * Returns the error information for the last error that occurred when executing
+     * this statement.
+     *
+     * @return array
+     */
+    public function errorInfo()
+    {
+        return "Salesforce Datasource doesnt produce PDO error codes - exceptions are usually thrown";
+    }
+
+    /**
+     * Closes a cursor in the database, freeing up any resources and memory
+     * allocated to it. In most cases you don't need to call this method, as it is
+     * automatically called after fetching all results from the result set.
+     *
+     * @return void
+     */
+    public function closeCursor()
+    {
+        return true;
+    }
 }
