@@ -3,7 +3,7 @@
 
 ## Installation
 
-** Please note - this plugin is still under active development and is very much in a pre-alpha state - Reading SF records seems to work fine and Saving works in a limited fashion but it is not API compatible with the CakePHP 3.x ORM just yet - I am working on it! **
+**Please note - this plugin is still under active development and is very much in a pre-alpha state - Reading SF records seems to work fine and Saving works in a limited fashion but it is not API compatible with the CakePHP 3.x ORM just yet - I am working on it!**
     
 You can install this plugin into your CakePHP application using [composer](http://getcomposer.org).
 
