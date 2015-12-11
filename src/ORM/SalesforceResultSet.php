@@ -92,4 +92,21 @@ class SalesforceResultSet extends ResultSet
         }
         return $this->_groupResult($row);
     }
+
+    /**
+     * Get the first record from a result set.
+     *
+     * This method will also close the underlying statement cursor.
+     *
+     * @return array|object
+     */
+    public function first()
+    {
+        foreach ($this as $result) {
+            if ($this->_statement && !$this->_useBuffering) {
+                $this->_statement->closeCursor();
+            }
+            return new $this->_entityClass($result);
+        }
+    }
 }
