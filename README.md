@@ -28,11 +28,14 @@ Also there is NO schema caching so this definitely isn't ready for production us
 1. This uses the PHP-Force.com toolkit as a dependency
 2. This uses SOAP and NOT REST (Because of Reasons™)
 3. I repeat - this is like version 0.0.1a - I havent even tested saving an entity yet
-4. It will likely stay this way on Github for a while as I am developing on a private repo but ill update regularly once I have some good features
-5. Feel free to submit pull requests - here are a few examples of things I'd like to implement / test
+4. This will be very slow in its current state - both the connection and the schema need to be cached to speed things up
+5. It will likely stay this way on Github for a while as I am developing on a private repo but ill update regularly once things are reasonably stable!
+6. Feel free to submit pull requests - here are a few examples of things I'd like to implement / test
     1. Associations between native Cake Tables & API Tables
     2. Tests (Most can probably be ripped from the core tests I assume)
-    3. Testing with all SObjects (currently I have only tested with Contact but from my experience with my version 2.x datasource this is usually enoguh to work with all SObjects
+    3. Testing with all SObjects (currently I have only tested with Contact but from my experience with my version 2.x datasource this is usually enoguh to work with all SObjects)
+    4. Caching
+    5. Efficiency increases.
     
     
     
