@@ -107,7 +107,7 @@ Then browse to /salesforces and you should have a couple of the standard Salesfo
 
 ## Interfacing with other Salesforce Items
 
-This should simply be a case of extending "SalesforceTable" rather than Table with your chosen Item (e.g. Account)
+This should simply be a case of extending "SalesforcesTable" rather than Table with your chosen Item (e.g. Account)
 
 ```php
     <?php
