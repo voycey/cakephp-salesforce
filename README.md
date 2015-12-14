@@ -3,7 +3,14 @@
 
 ## Installation
 
-**Please note - this plugin is still under active development and is very much in a pre-alpha state - Reading SF records seems to work fine and Saving works in a limited fashion but it is not API compatible with the CakePHP 3.x ORM just yet - I am working on it!**
+**This plugin is now in Beta**
+
+* API Compatible Saving & Reading is working
+* Schema & Connection Caching is working
+* Tests are being written but will only cover the basics
+* Bear in mind that any API interaction is expensive, you should be using this with a deferred execution method.
+ 
+ 
     
 You can install this plugin into your CakePHP application using [composer](http://getcomposer.org).
 
@@ -15,33 +22,30 @@ composer require voycey/salesforce-datasource-cakephp-3.x
 
 ## Information
 
-This plugin is in EARLY Alpha release, there are currently no tests, and the amount of testing I have done is limited
-I am creating this github repo to allow me to import it in to my project via composer to test it's integration that way.
+This has been somewhat of a learning curve for me, due to the nature of how Datasources are created in 3.x.
+I have tried to follow the patterns of the other SQL-like datasources, Eager loading is used (as in SQL sources) and there is a limited dialect.
 
-This has been somewhat of a learning curve for me, due to the nature of how Datasources are created in 3.x this is quite 
-possibly very "hacky", however I have tried to follow the patterns of the other SQL-like datasources.
+I would have liked to do some processing on the WSDL as I did in my 2.x datasource in order to create the schema however this wasn't possible as
+I now needed to see the status of certain fields (readable / updateable) which has caused a need for a further call to the API.
 
-Also there is NO schema caching so this definitely isn't ready for production use (I am getting onto this next)
+Any API connections are cached for 1 hour (Salesforce timeout is 2 hours), after this time the connection will be refreshed 
+(but this shouldn't matter as you are using this with a deferred execution method right?)
 
 ## Notes
 
 1. This uses the PHP-Force.com toolkit as a dependency
 2. This uses SOAP and NOT REST (Because of Reasons™)
-3. I repeat - this is like version 0.0.1a - I havent even tested saving an entity yet
-4. This will be very slow in its current state - both the connection and the schema need to be cached to speed things up
-5. It will likely stay this way on Github for a while as I am developing on a private repo but ill update regularly once things are reasonably stable!
-6. Feel free to submit pull requests - here are a few examples of things I'd like to implement / test
+3. I haven't yet tested this with anything other than the Contact Object (It should work fine though)
+4. Feel free to submit pull requests - here are a few examples of things I'd like to implement / test
     1. Associations between native Cake Tables & API Tables
     2. Tests (Most can probably be ripped from the core tests I assume)
     3. Testing with all SObjects (currently I have only tested with Contact but from my experience with my version 2.x datasource this is usually enoguh to work with all SObjects)
-    4. Caching
-    5. Efficiency increases.
+    4. Efficiency increases.
+    
     
     
     
 ## Usage
-
-If you are feeling brave then here are some basic instructions to getting it working
 
 1. Do composer reqire as above
 2. Add ```Plugin::load('Salesforce', ['bootstrap' => true, 'routes' => true]);``` to your bootstrap.php
@@ -61,7 +65,7 @@ If you are feeling brave then here are some basic instructions to getting it wor
 
         **Your SF_PASSWORD should be your password + security token**
  
-4. Get your Enterprise WSDL and place it in the ```config``` directory
+4. Get your Enterprise WSDL and place it in the app ```config``` directory
 5. Create a test controller that looks something like this
 
     ```php
@@ -100,3 +104,34 @@ If you are feeling brave then here are some basic instructions to getting it wor
 
 
 Then browse to /salesforces and you should have a couple of the standard Salesforce records. If not then go back and repeat these steps. If you get an interesting error message then.... well sorry, I'm sure it will get fixed as I use it more
+
+## Interfacing with other Salesforce Items
+
+This should simply be a case of extending "SalesforceTable" rather than Table with your chosen Item (e.g. Account)
+
+```php
+    <?php
+        namespace Salesforce\Model\Table;
+        
+        use Salesforce\Model\Entity\Salesforce;
+        
+        class SalesforceAccountTable extends SalesforcesTable
+        {
+            public $name = "Account";
+        
+            /**
+             * Initialize method
+             *
+             * @param  array $config The configuration for the Table.
+             * @return void
+             */
+            public function initialize(array $config)
+            {
+                parent::initialize($config);
+        
+                $this->table('Account');
+                $this->displayField('Name');
+                $this->primaryKey('Id');
+            }
+        }
+```
