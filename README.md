@@ -50,56 +50,56 @@ Any API connections are cached for 1 hour (Salesforce timeout is 2 hours), after
 2. Add ```Plugin::load('Salesforce', ['bootstrap' => true, 'routes' => true]);``` to your bootstrap.php
 3. Create the connection in app.php like this:
 
-    ```php
-              'salesforce' => [
-                    'className' => 'Salesforce\Database\SalesforceConnection',
-                    'driver' => 'Salesforce\Database\Driver\Salesforce',
-                    'persistent' => false,
-                    'username' => getenv("SF_USER"),
-                    'password' => getenv("SF_PASSWORD"),
-                    'quoteIdentifiers' => false,
-                    'my_wsdl' => 'enterprise.wsdl.xml'
-                ],
-    ```
+```php
+  'salesforce' => [
+     'className' => 'Salesforce\Database\SalesforceConnection',
+     'driver' => 'Salesforce\Database\Driver\Salesforce',
+     'persistent' => false,
+     'username' => getenv("SF_USER"),
+     'password' => getenv("SF_PASSWORD"),
+     'quoteIdentifiers' => false,
+     'my_wsdl' => 'enterprise.wsdl.xml'
+  ],
+```
 
         **Your SF_PASSWORD should be your password + security token**
  
 4. Get your Enterprise WSDL and place it in the app ```config``` directory
 5. Create a test controller that looks something like this
 
-    ```php
-            <?php
-                namespace App\Controller;
-                   
-                use App\Controller\AppController;
-                use Cake\Event\Event;
-                   
-                class SalesforcesController extends AppController 
-                {
-                   
-                       public function beforeFilter(Event $event)
-                       {
-                           parent::beforeFilter($event);
-                       }
-                       
-                       public function index()
-                       {
-                           $this->autoRender = false;
-                           $this->loadModel('Salesforce.SalesforceContact');
-                           $query = $this->SalesforceContact->find('all')
-                                       ->select(['Id','Email','LastName'])
-                                       ->where(['Email' => "info@salesforce.com"]
-                                   );
-                   
-                           foreach ($query as $row) {
-                               echo "<pre>";
-                               print_r($row);
-                               echo "</pre>";
-                           }
-                   
-                       }
-                }
-    ```        
+ ```php
+  <?php
+     namespace App\Controller;
+        
+     use App\Controller\AppController;
+     use Cake\Event\Event;
+        
+     class SalesforcesController extends AppController 
+     {
+        
+        public function beforeFilter(Event $event)
+        {
+            parent::beforeFilter($event);
+        }
+        
+        public function index()
+        {
+            $this->autoRender = false;
+            $this->loadModel('Salesforce.SalesforceContact');
+            $query = $this->SalesforceContact->find('all')
+                        ->select(['Id','Email','LastName'])
+                        ->where(['Email' => "info@salesforce.com"]
+                    );
+    
+            foreach ($query as $row) {
+              echo "<pre>";
+              print_r($row);
+              echo "</pre>";
+            }
+    
+        }
+     }
+ ```        
 
 
 Then browse to /salesforces and you should have a couple of the standard Salesforce records. If not then go back and repeat these steps. If you get an interesting error message then.... well sorry, I'm sure it will get fixed as I use it more.
