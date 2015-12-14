@@ -44,12 +44,12 @@ Also there is NO schema caching so this definitely isn't ready for production us
 If you are feeling brave then here are some basic instructions to getting it working
 
 1. Do composer reqire as above
-2. Add ```Plugin::load('Salesforce', ['bootstrap' => false, 'routes' => true]);``` to your bootstrap.php
+2. Add ```Plugin::load('Salesforce', ['bootstrap' => true, 'routes' => true]);``` to your bootstrap.php
 3. Create the connection in app.php like this:
 
     ```php
               'salesforce' => [
-                    'className' => 'Salesforce\Database\MyConnection',
+                    'className' => 'Salesforce\Database\SalesforceConnection',
                     'driver' => 'Salesforce\Database\Driver\Salesforce',
                     'persistent' => false,
                     'username' => getenv("SF_USER"),

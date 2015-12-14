@@ -4,6 +4,7 @@ namespace Salesforce\Model\Table;
 use Salesforce\Model\Entity\Salesforce;
 use Salesforce\ORM\SalesforceQuery;
 use Salesforce\ORM\SalesforceTable;
+use Cake\Cache\Cache;
 use Cake\Utility\Xml;
 use Cake\Utility\Hash;
 
@@ -46,6 +47,7 @@ class SalesforcesTable extends SalesforceTable
         $mySforceConnection = new \SforceEnterpriseClient();
         $mySoapClient = $mySforceConnection->createConnection($wsdl);
 
+        $sflogin = (array)Cache::read('salesforce_login', 'salesforce');
         if(!empty($sflogin['sessionId'])) {
             $mySforceConnection->setSessionHeader($sflogin['sessionId']);
             $mySforceConnection->setEndPoint($sflogin['serverUrl']);
@@ -53,17 +55,20 @@ class SalesforcesTable extends SalesforceTable
             try{
                 $mylogin = $mySforceConnection->login($config['connection']->config()['username'],$config['connection']->config()['password']);
                 $sflogin = array('sessionId' => $mylogin->sessionId, 'serverUrl' => $mylogin->serverUrl);
-                //Cache::write('salesforce_login', $sflogin, 'short');
+                Cache::write('salesforce_login', $sflogin, 'salesforce');
             } catch (Exception $e) {
                 $this->log("Error logging into salesforce from Table - Salesforce down?");
             }
         }
 
-        $sforceSchema = $mySforceConnection->describeSObject($this->name);
+
+        if (!$sObject = Cache::read($this->name.'_sObject', 'salesforce')) {
+            $sObject = $mySforceConnection->describeSObject($this->name);
+            Cache::write($this->name.'_sObject', $sObject, 'salesforce');
+        }
 
 
-
-        foreach ($sforceSchema->fields as $field) {
+        foreach ($sObject->fields as $field) {
             if(substr($field->soapType,0,3) != "ens") { //we dont want type of ens
                 if(substr($field->soapType,4) == "int") {
                     $type_name = "integer";
@@ -82,14 +87,29 @@ class SalesforcesTable extends SalesforceTable
                 }
             }
         }
-        $this->schema($this->updatable_fields);
+
+        //Cache select fields right away as most likely need them immediately
+        Cache::write($this->name.'_selectable_schema', $this->selectable_fields, 'salesforce');
+
+
+        if (!$this->schema(Cache::read($this->name.'_updatable_schema', 'salesforce'))) {
+            $this->schema($this->updatable_fields);
+            Cache::write($this->name.'_updatable_schema', $this->updatable_fields, 'salesforce');
+        }
+
     }
 
     public function beforeFind($event, $query, $options, $primary) {
-        $this->schema($this->selectable_fields);
+        if (!$this->schema(Cache::read($this->name.'_selectable_schema', 'salesforce'))) {
+            $this->schema($this->selectable_fields);
+            Cache::write($this->name.'_selectable_schema', $this->selectable_fields, 'salesforce');
+        }
     }
 
     public function beforeSave($event, $entity, $options) {
-        $this->schema($this->updatable_fields);
+        if (!$this->schema(Cache::read($this->name.'_updatable_schema', 'salesforce'))) {
+            $this->schema($this->updatable_fields);
+            Cache::write($this->name.'_updatable_schema', $this->updatable_fields, 'salesforce');
+        }
     }
 }

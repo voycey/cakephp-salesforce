@@ -3,6 +3,7 @@
 namespace Salesforce\Database\Driver;
 
 use Cake\Database\Query;
+use Cake\Cache\Cache;
 /**
  * SF driver trait
  */
@@ -30,7 +31,7 @@ trait SalesforceDriverTrait
         $mySforceConnection = new \SforceEnterpriseClient();
         $mySoapClient = $mySforceConnection->createConnection($wsdl);
 
-        //$sflogin = (array)Cache::read('salesforce_login', 'short');
+        $sflogin = (array)Cache::read('salesforce_login', 'salesforce');
 
         if(!empty($sflogin['sessionId'])) {
             $mySforceConnection->setSessionHeader($sflogin['sessionId']);
@@ -39,7 +40,7 @@ trait SalesforceDriverTrait
             try{
                 $mylogin = $mySforceConnection->login($this->config['username'], $this->config['password']);
                 $sflogin = array('sessionId' => $mylogin->sessionId, 'serverUrl' => $mylogin->serverUrl);
-                //Cache::write('salesforce_login', $sflogin, 'short');
+                Cache::write('salesforce_login', $sflogin, 'salesforce');
             } catch (Exception $e) {
                 $this->log("Error logging into salesforce - Salesforce down?");
                 $this->log("Username: " . $this->config['username']);
