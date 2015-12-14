@@ -7,7 +7,6 @@
 
 * API Compatible Saving & Reading is working
 * Schema & Connection Caching is working
-* Tests are being written but will only cover the basics
 * Bear in mind that any API interaction is expensive, you should be using this with a deferred execution method.
  
  
@@ -38,8 +37,8 @@ Any API connections are cached for 1 hour (Salesforce timeout is 2 hours), after
 3. I haven't yet tested this with anything other than the Contact Object (It should work fine though)
 4. Feel free to submit pull requests - here are a few examples of things I'd like to implement / test
     1. Associations between native Cake Tables & API Tables
-    2. Tests (Most can probably be ripped from the core tests I assume)
-    3. Testing with all SObjects (currently I have only tested with Contact but from my experience with my version 2.x datasource this is usually enoguh to work with all SObjects)
+    2. Tests (Most can probably be ripped from the core tests I assume) - I don't plan to do many as to test properly would require access to the API.
+    3. Testing with all SObjects (currently I have only tested with Contact but from my experience with my version 2.x datasource this is usually enough to work with all SObjects)
     4. Efficiency increases.
     
     
