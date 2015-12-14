@@ -31,7 +31,7 @@ class SalesforceSchema extends BaseSchema
      */
     public function listTablesSql($config)
     {
-        return ['SHOW TABLES FROM ' . $this->_driver->quoteIdentifier($config['database']), []];
+        return false;
     }
 
     /**
@@ -92,7 +92,7 @@ class SalesforceSchema extends BaseSchema
      */
     public function describeColumnSql($tableName, $config)
     {
-        return ['SHOW FULL COLUMNS FROM ' . $this->_driver->quoteIdentifier($tableName), []];
+        return false;
     }
 
     /**
