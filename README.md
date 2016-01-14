@@ -1,138 +1,220 @@
-# Salesforce Datasource plugin for CakePHP 3.x
-[![Latest Stable Version](https://poser.pugx.org/voycey/salesforce-datasource-cakephp-3.x/v/stable)](https://packagist.org/packages/voycey/salesforce-datasource-cakephp-3.x) [![Total Downloads](https://poser.pugx.org/voycey/salesforce-datasource-cakephp-3.x/downloads)](https://packagist.org/packages/voycey/salesforce-datasource-cakephp-3.x) [![Latest Unstable Version](https://poser.pugx.org/voycey/salesforce-datasource-cakephp-3.x/v/unstable)](https://packagist.org/packages/voycey/salesforce-datasource-cakephp-3.x) [![License](https://poser.pugx.org/voycey/salesforce-datasource-cakephp-3.x/license)](https://packagist.org/packages/voycey/salesforce-datasource-cakephp-3.x)
+CakePHP Salesforce Enterprise Plugin
+=========================
+A plugin and datasource that allows access to salesforce via CakePHP CRUD methods for Salesforce Enterprise Entities.
 
-## Installation
+I have decided to release this as Open Source as we are moving away from this method, I can offer basic support for this, if you have any alterations to make please submit a pull request and ill merge it in when I can!
 
-**This plugin is now in Beta**
+**For Cake 3.x I have started on a new style data source which can be found at https://github.com/voycey/salesforce-datasource-cakephp-3.x** (Currently in early alpha)
 
-* API Compatible Saving & Reading is working
-* Schema & Connection Caching is working
-* Bear in mind that any API interaction is expensive, you should be using this with a deferred execution method.
- 
- 
-    
-You can install this plugin into your CakePHP application using [composer](http://getcomposer.org).
+***
+@Requires Force.com / Developer Force PHP Toolkit
 
-The recommended way to install composer packages is:
+@Requires CakePHP 2.x (Tested on Cake 2.7)
 
-```
-composer require voycey/salesforce-datasource-cakephp-3.x
-```
+@Requires Enterprise Salesforce
 
-## Information
+@Requires APC Enabled (Can be changed in code)
 
-This has been somewhat of a learning curve for me, due to the nature of how Datasources are created in 3.x.
-I have tried to follow the patterns of the other SQL-like datasources, Eager loading is used (as in SQL sources) and there is a limited dialect.
+@Recommended:
 
-I would have liked to do some processing on the WSDL as I did in my 2.x datasource in order to create the schema however this wasn't possible as
-I now needed to see the status of certain fields (readable / updateable) which has caused a need for a further call to the API.
+* Your Enterprise WSDL
+* Knowledge of Salesforce API Versions
 
-Any API connections are cached for 1 hour (Salesforce timeout is 2 hours), after this time the connection will be refreshed 
-(but this shouldn't matter as you are using this with a deferred execution method right?)
+***
 
-## Notes
+Background
+----------
 
-1. This uses the PHP-Force.com toolkit as a dependency
-2. This uses SOAP and NOT REST (Because of Reasons™)
-3. I have only tested this with the Contact and Account SObjects, the Contact example is included in the plugin, to create more models to interact with other SObjects copy SalesforceContactTable as a template (see instructions below).
-4. Feel free to submit pull requests - here are a few examples of things I'd like to implement / test
-    1. Associations between native Cake Tables & API Tables
-    2. Tests (Most can probably be ripped from the core tests I assume) - I don't plan to do many as to test properly would require access to the API.
-    3. Testing with all SObjects (currently I have only tested with a couple but from experience with my version 2.x datasource this is usually enough to work with all SObjects)
-    4. Efficiency increases.
-    
-    
-    
-    
-## Usage
+This plugin was created to allow easy interaction with a Salesforce Enterprise
+instance either by using a WSDL or by automagically fetching the fields for a
+specific entity. It provides a unified method of querying, editing, saving and
+deleting on several (tested) entities (Currently **Contacts**, **Leads** and
+**Accounts**), and it **SHOULD** work on all other entities!
 
-1. Do composer reqire as above
-2. Add ```Plugin::load('Salesforce', ['bootstrap' => true, 'routes' => true]);``` to your bootstrap.php
-3. Create the connection in app.php like this:
+###What does it provide?
+Basically it allows you to use standard CakePHP find(), save() and delete()
+methods on models which map to Salesforce Entities. This means that if you
+want to find all users who work for X company you could simply issue this:
 
 ```php
-  'salesforce' => [
-     'className' => 'Salesforce\Database\SalesforceConnection',
-     'driver' => 'Salesforce\Database\Driver\Salesforce',
-     'persistent' => false,
-     'username' => getenv("SF_USER"),
-     'password' => getenv("SF_PASSWORD"),
-     'quoteIdentifiers' => false,
-     'my_wsdl' => 'enterprise.wsdl.xml'
-  ],
+$this->SalesforceContact->find('all', array('conditions' => array('Company' =>
+'Acme inc')));
 ```
 
-        **Your SF_PASSWORD should be your password + security token**
- 
-4. Get your Enterprise WSDL and place it in the app ```config``` directory
-5. Create a test controller that looks something like this
+And this will return you a lovely standard CakePHP data array which you can
+manipulate and use however you want.
 
- ```php
-  <?php
-     namespace App\Controller;
-        
-     use App\Controller\AppController;
-     use Cake\Event\Event;
-        
-     class SalesforcesController extends AppController 
-     {
-        
-        public function beforeFilter(Event $event)
-        {
-            parent::beforeFilter($event);
-        }
-        
-        public function index()
-        {
-            $this->autoRender = false;
-            $this->loadModel('Salesforce.SalesforceContact');
-            $query = $this->SalesforceContact->find('all')
-                        ->select(['Id','Email','LastName'])
-                        ->where(['Email' => "info@salesforce.com"]
-                    );
-    
-            foreach ($query as $row) {
-              echo "<pre>";
-              print_r($row);
-              echo "</pre>";
-            }
-    
-        }
-     }
- ```        
+###Why Is it needed?
+Salesforce has a weird way of allowing you to query it's entities, everything
+would be really simple if with SOQL (with salesforce's own flavour of SQL) you
+could simply issue a "SELECT * FROM Contacts" - however you cant do this - you
+need to specify which fields you want to select. This is fine if you only use
+the standard fields but probably 95% of all Enterprise instances of Salesforce
+have custom fields implemented.
+
+###Why is it unique?
+Surely it is just a SOAP client I hear you asking? Well yes and no! It uses
+the Developer force toolkit as transport to fetch the items but it does a fair
+few clever things underneath the hood aswell, **Maybe most importantly it
+prevents the need for having to pass in a HUGE list of fields to each request
+you want to make to Salesforce or having to create custom queries - it can all
+be done with cakes "find" method** the prime of which is the ability to
+function without a WSDL file. The WSDL file describes your companies data
+structures, it is useful for querying a web service but again the Salesforce
+one has a few quirks, namely with how it labels specific fields and handles
+ID's, and because of this getting a CakePHP schema to function properly is a
+little like smashing your head against a brick wall. 
+
+<!--###Why Am I selling this?
+Well the version I used in the project I did was pretty specific to my project
+so I have left that one alone but I have created this Plugin to allow it to
+help other people out, With all of the research and coding of the Datasource
+first time around I think that this probably took me close on 2 weeks to get
+right, I have drawn on that Knowledge and created this simpler version and
+packaged it up into a Plugin to hopefully help anyone else that needs a "drop
+in" Salesforce integration. -->
 
 
-Then browse to /salesforces and you should have a couple of the standard Salesforce records. If not then go back and repeat these steps. If you get an interesting error message then.... well sorry, I'm sure it will get fixed as I use it more.
+#Installation
 
-## Interfacing with other Salesforce Items
-
-This should simply be a case of extending "SalesforcesTable" rather than Table with your chosen Item (e.g. Account)
+1. Clone the Developerforce PHP toolkit into app/Vendor/salesforce
+   you should have a path that looks like app/Vendor/salesforce/soapclient
+2. Install this Plugin into app/Plugins/Salesforce
+3. Place the following code into database.php
 
 ```php
- <?php
-  namespace App\Model\Table;
-  
-  use Salesforce\Model\Entity\Salesforce;
-  use Salesforce\Model\Table\SalesforcesTable;
-  
-  class SalesforceAccountTable extends SalesforcesTable
-  {
-      public $name = "Account";
-  
-      /**
-       * Initialize method
-       *
-       * @param  array $config The configuration for the Table.
-       * @return void
-       */
-      public function initialize(array $config)
-      {
-          parent::initialize($config);
-  
-          $this->table('Account');
-          $this->displayField('Name');
-          $this->primaryKey('Id');
-      }
-  }
-
+ var $sflive = array(
+            'datasource' => 'SalesforceSource',
+            'standard_wsdl' => 'enterprise.wsdl.xml',
+            'dynamic_mode' => false,
+            'my_wsdl' => 'enterprise.wsdl.xml',//optional but recommended
+            'username' => 'YourSalesForceUsername',
+            'password' => 'YourSFPassword+SecurityToken'
+        );
 ```
+4. Download your enterprise.wsdl.xml and place it in app/Config (if you dont plan on using this see "Development Mode" below
+5. Enable the plugin in your bootstrap.php:
+
+```php
+CakePlugin::load(
+        array(
+            'Salesforce' => array('bootstrap' => true)
+  )
+);
+```
+
+Ok so that is the basic setup now it needs a little configuration in order to
+match your Salesforce setup.
+
+One of the other quirks of Salesforce is that it has different API versions
+that have different functionality (AND different default fields). This is
+where you might fall down with it:
+
+1. First open up your enterprise.wsdl.xml and look in the comments at the top
+   for the following lines:
+```
+Salesforce.com Enterprise Web Services API Version 29.0
+Generated on 2013-11-29 01:39:56 +0000.
+```
+That is your API Version!
+
+2. Now you need to tell the soapclient to use this XML Version:
+in the file app/Vendor/salesforce/soapclient/SForceBaseClient.php find the
+following lines and ensure they are set to the same API version as the version
+above:
+
+```php
+class SforceBaseClient {
+    protected $sforce;
+  protected $sessionId;
+  protected $location;
+  protected $version = '29.0';
+```
+
+***
+##Usage:
+So the usage is fairly simple, There are some examples in
+app/Plugin/Salesforce/Controllers/TestController.php but essentially it
+is:
+
+```php
+$this->loadModel('Salesforce.SalesforceContact');
+$this->SalesforceContact->find('all', array('conditions' => array('Company' =>
+'Acme inc')));
+```
+
+or if you want to interact with Accounts
+
+```php
+$this->loadModel('Salesforce.SalesforceAccount');
+$this->SalesforceAccount->find('all', array('conditions' => array('Name' =>
+'Acme inc')));
+```
+
+##WAIT! I want to interact with something like Contracts
+Ok so as stated this is untested (Mostly because I dont have any contracts to
+test with) **BUT** there is no reason why this shouldn't work, the plugin is
+agnostic of the entity that it is using as it simply issues commands via SOQL
+and then processes the return data. I would say that if you can fetch fields
+using the Salesforce Developer Workbench (Google it!) then you can use this to
+do it.
+
+###How?
+The easiest way would be to just create some new models for the entities you
+want to access in app/Plugin/Salesforce/Model - for example:
+######SalesforceContract.php
+```php
+    App::uses('Salesforce', 'Salesforce.Model');
+    App::import('Utility', 'Xml');
+    /**
+     * Class SalesforceContract
+     */
+
+    class SalesforceContract extends Salesforce {
+
+        public function __construct($id = false, $table = null, $ds = null) {
+            $this->name = "Contract";
+            parent::__construct($id, $table, $ds);
+
+        }
+    }
+?>
+```
+
+This would then allow you to query the Contract table in Salesforce using
+
+```php 
+$this->loadModel('Salesforce.SalesforceContract');
+$this->SalesforceContract->find('all', array('conditions' => array('Name' =>
+'Acme inc')));
+```
+
+
+##Advanced Configuration
+So I have tried to keep this as simple as possible with not much configuration
+other than absolutely necessary but the plugin does have a few options:
+
+###Development Mode
+If you set **dynamic_mode = true** in database.php this will then not use your
+WSDL, it will try and create a schema from your Salesforce instance for the
+model you are using, this isnt 100% foolproof but if you are developing a lot
+and people are making changes to your Saleforce instance regularly this will
+be a godsend, mostly because Salesforce gets really pissy when you try and
+include fields that arent there (Or Omit fields that it thinks you should
+have). 
+
+It should cache the schema it creates but obviously fetching this schema from
+Salesforce takes time so using this on a production server really isnt
+recommended.
+
+This is used instead of the "Standard WSDL" that is provided by Salesforce -
+mostly because that Standard WSDL wont include all of your custom fields!
+
+
+Troubleshooting
+---------------
+
+:I have created new fields and they show in the result array from Salesforce but the value hasn't been updated.
+
+You probably haven't downloaded the updated wsdl from Salesforce - if you are using development mode try clearing your cache as it caches the schema.
+
