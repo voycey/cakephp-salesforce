@@ -1,8 +1,8 @@
 {
-    "name": "voycey/salesforce-datasource",
+    "name": "voycey/cakephp-salesforce",
     "description": "Salesforce Enterprise CakePHP Datasource",
     "type": "cakephp-plugin",
-    "homepage": "https://github.com/voycey/salesforce-datasource",
+    "homepage": "https://github.com/voycey/cakephp-salesforce",
     "license": "MIT",
     "require": {
         "php": ">=5.4.16",
