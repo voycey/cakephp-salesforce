@@ -1,6 +1,9 @@
 # Salesforce Datasource plugin for CakePHP 3.x
 [![Latest Stable Version](https://poser.pugx.org/voycey/salesforce-datasource-cakephp-3.x/v/stable)](https://packagist.org/packages/voycey/salesforce-datasource-cakephp-3.x) [![Total Downloads](https://poser.pugx.org/voycey/salesforce-datasource-cakephp-3.x/downloads)](https://packagist.org/packages/voycey/salesforce-datasource-cakephp-3.x) [![Latest Unstable Version](https://poser.pugx.org/voycey/salesforce-datasource-cakephp-3.x/v/unstable)](https://packagist.org/packages/voycey/salesforce-datasource-cakephp-3.x) [![License](https://poser.pugx.org/voycey/salesforce-datasource-cakephp-3.x/license)](https://packagist.org/packages/voycey/salesforce-datasource-cakephp-3.x)
 
+## For earlier versions of CakePHP (2.x)
+Please use the 2.x branch and follow the readme instructions under that for usage instructions
+
 ## Installation
 
 **This plugin is now in Beta**
