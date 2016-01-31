@@ -39,9 +39,9 @@ Any API connections are cached for 1 hour (Salesforce timeout is 2 hours), after
 2. This uses SOAP and NOT REST (Because of Reasons™)
 3. I have only tested this with the Contact and Account SObjects, the Contact example is included in the plugin, to create more models to interact with other SObjects copy SalesforceContactTable as a template (see instructions below).
 4. Feel free to submit pull requests - here are a few examples of things I'd like to implement / test
-    1. Associations between native Cake Tables & API Tables
+    1. Associations between native Cake Tables & API Tables (I'm not sure this is actually possible though!)
     2. Tests (Most can probably be ripped from the core tests I assume) - I don't plan to do many as to test properly would require access to the API.
-    3. Testing with all SObjects (currently I have only tested with a couple but from experience with my version 2.x datasource this is usually enough to work with all SObjects)
+    3. Testing with all SObjects (currently I have only tested with a few but from experience with my version 2.x datasource this is usually enough to work with all SObjects)
     4. Efficiency increases.
     
     
