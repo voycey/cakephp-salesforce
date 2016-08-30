@@ -84,7 +84,7 @@ in" Salesforce integration. -->
 
 ```php
  var $sflive = array(
-            'datasource' => 'SalesforceSource',
+            'datasource' => 'Salesforce.SalesforceSource',
             'standard_wsdl' => 'enterprise.wsdl.xml',
             'dynamic_mode' => false,
             'my_wsdl' => 'enterprise.wsdl.xml',//optional but recommended
