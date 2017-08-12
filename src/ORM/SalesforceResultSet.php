@@ -38,10 +38,10 @@ class SalesforceResultSet extends ResultSet
      *
      * @return void
      */
-    protected function _calculateColumnMap()
+	protected function _calculateColumnMap($query)
     {
         $map = []; //My one
-        foreach ($this->_query->clause('select') as $key => $field) {
+        foreach ($query->clause('select') as $key => $field) {
             $key = trim($key, '"`[]');
             if (strpos($key, '__') > 0) {
                 $parts = explode('__', $key, 2);
