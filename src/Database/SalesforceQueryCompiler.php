@@ -14,7 +14,10 @@
  */
 namespace Salesforce\Database;
 
+use Cake\Database\Query;
 use Cake\Database\QueryCompiler;
+use Cake\Database\ValueBinder;
+
 /**
  * Responsible for compiling a Query object into its SQL representation
  *
@@ -76,7 +79,7 @@ class SalesforceQueryCompiler extends QueryCompiler
      * @param \Cake\Database\ValueBinder $generator the placeholder generator to be used in expressions
      * @return \Closure
      */
-    public function compile($query, $generator)
+	public function compile(Query $query, ValueBinder $generator)
     {
         $sql = '';
         $type = $query->type();

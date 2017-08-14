@@ -72,10 +72,14 @@ class SalesforcesTable extends SalesforceTable
             if(substr($field->soapType,0,3) != "ens") { //we dont want type of ens
                 if(substr($field->soapType,4) == "int") {
                     $type_name = "integer";
+                } elseif (substr($field->soapType,4) == "double") {
+                    $type_name = "float";
                 } elseif (substr($field->soapType,4) == "boolean") {
                     $type_name = "boolean";
-                } elseif (substr($field->soapType,4) == "dateTime" || substr($field->soapType,4) == "date") {
+                } elseif (substr($field->soapType,4) == "dateTime") {
                     $type_name = "datetime";
+                } elseif (substr($field->soapType,4) == "date") {
+                    $type_name = "date";
                 } else {
                     $type_name = "string";
                 }

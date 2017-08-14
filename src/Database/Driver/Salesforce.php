@@ -14,6 +14,8 @@
  */
 namespace Salesforce\Database\Driver;
 
+use Cake\Database\Query;
+use Cake\Database\ValueBinder;
 use Salesforce\Database\Dialect\SalesforceDialectTrait;
 use Salesforce\Database\Driver\SalesforceDriverTrait;
 use Salesforce\Database\SalesforceQueryCompiler;
@@ -80,7 +82,7 @@ class Salesforce extends Driver
     /**
      * Prepares a sql statement to be executed
      *
-     * @param string|\App\Database\MyQuery $query The query to prepare.
+     * @param string|\Cake\Database\Query $query The query to prepare.
      * @return \Cake\Database\StatementInterface
      */
     public function prepare($query)
@@ -117,12 +119,12 @@ class Salesforce extends Driver
      * Transforms the passed query to this Driver's dialect and returns an instance
      * of the transformed query and the full compiled SQL string
      *
-     * @param \App\ORM\MyQuery $query The query to compile.
+     * @param \Cake\Database\Query $query The query to compile.
      * @param \Cake\Database\ValueBinder $generator The value binder to use.
      * @return array containing 2 entries. The first entity is the transformed query
      * and the second one the compiled SQL
      */
-    public function compileQuery($query, $generator)
+    public function compileQuery(Query $query, ValueBinder $generator)
     {
         $processor = $this->newCompiler();
         $translator = $this->queryTranslator($query->type());

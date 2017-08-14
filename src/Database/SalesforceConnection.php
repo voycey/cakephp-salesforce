@@ -14,6 +14,8 @@
  */
 namespace Salesforce\Database;
 
+use Cake\Database\Query;
+use Cake\Database\ValueBinder;
 use Salesforce\Database\Schema\SalesforceCollection as SchemaCollection;
 use Cake\Database\TypeConverterTrait;
 use Cake\Database\Connection;
@@ -36,11 +38,11 @@ class SalesforceConnection extends Connection
      * Compiles a Query object into a SQL string according to the dialect for this
      * connection's driver
      *
-     * @param \App\Database\Query $query The query to be compiled
-     * @param \Cake\Database\ValueBinder $generator The placeholder generator to use
+     * @param Query $query The query to be compiled
+     * @param ValueBinder $generator The placeholder generator to use
      * @return string
      */
-    public function compileQuery($query, $generator)
+    public function compileQuery(Query $query, ValueBinder $generator)
     {
         return $this->driver()->compileQuery($query, $generator)[1];
     }
@@ -48,14 +50,14 @@ class SalesforceConnection extends Connection
     /**
      * Create a new Query instance for this connection.
      *
-     * @return \App\Database\Query
+     * @return Query
      */
     public function newQuery()
     {
         return new SalesforceQuery($this);
     }
 
-    public function run($query)
+    public function run(Query $query)
     {
         $statement = $this->prepare($query);
         $query->valueBinder()->attachTo($statement);
