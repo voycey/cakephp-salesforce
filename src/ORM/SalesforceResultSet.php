@@ -70,7 +70,6 @@ class SalesforceResultSet extends ResultSet
      */
     protected function _groupResult($row)
     {
-
         return $row;
     }
 
@@ -106,7 +105,9 @@ class SalesforceResultSet extends ResultSet
             if ($this->_statement && !$this->_useBuffering) {
                 $this->_statement->closeCursor();
             }
-            return new $this->_entityClass($result);
+            $result = new $this->_entityClass($result);
+            $result->clean();
+            return $result;
         }
     }
 }
