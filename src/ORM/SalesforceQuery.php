@@ -60,7 +60,10 @@ class SalesforceQuery extends Query
 
         $this->_transformQuery();
 
-        $sql = SalesforceDatabaseQuery::sql(null, $this);
+        // Not a static function, and can't be made static because of base class,
+        // so we @hide the warning about a non-static function used in a static
+        // context.
+        $sql = @SalesforceDatabaseQuery::sql(null, $this);
 
         return $sql;
     }

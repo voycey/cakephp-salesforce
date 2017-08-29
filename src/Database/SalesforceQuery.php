@@ -51,11 +51,11 @@ class SalesforceQuery extends Query
     public function sql(ValueBinder $generator = null, $incoming = null)
     {
         if (!$generator) {
-            $generator = $this->valueBinder();
+            $generator = $incoming->valueBinder();
             $generator->resetCount();
         }
 
-        return $this->connection()->compileQuery($incoming, $generator);
+        return $incoming->connection()->compileQuery($incoming, $generator);
     }
 
     /**
