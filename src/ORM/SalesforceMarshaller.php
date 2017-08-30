@@ -59,10 +59,7 @@ class SalesforceMarshaller extends Marshaller
     {
         list($data, $options) = $this->_prepareDataAndOptions($data, $options);
 
-        $propertyMap = $this->_buildPropertyMap($options);
-
-        $schema = $this->_table->schema();
-        $primaryKey = $schema->primaryKey();
+        $primaryKey = (array)$this->_table->primaryKey();
         $entityClass = $this->_table->entityClass();
         $entity = new $entityClass();
         $entity->source($this->_table->registryAlias());
@@ -72,30 +69,37 @@ class SalesforceMarshaller extends Marshaller
                 $entity->accessible($key, $value);
             }
         }
-
         $errors = $this->_validate($data, $options, true);
+
+        $options['isMerge'] = false;
+        $propertyMap = $this->_buildPropertyMap($data, $options);
         $properties = [];
         foreach ($data as $key => $value) {
             if (!empty($errors[$key])) {
+                if ($entity instanceof InvalidPropertyInterface) {
+                    $entity->invalid($key, $value);
+                }
                 continue;
             }
-            $columnType = $schema->columnType($key);
-            if (isset($propertyMap[$key])) {
-                $assoc = $propertyMap[$key]['association'];
-                $value = $this->_marshalAssociation($assoc, $value, $propertyMap[$key]);
-            } elseif ($value === '' && in_array($key, $primaryKey, true)) {
+
+            if ($value === '' && in_array($key, $primaryKey, true)) {
                 // Skip marshalling '' for pk fields.
                 continue;
-            } elseif ($columnType) {
-                $converter = SalesforceType::build($columnType);
-                $value = $converter->marshal($value);
+            } elseif (isset($propertyMap[$key])) {
+                $properties[$key] = $propertyMap[$key]($value, $entity);
+            } else {
+                $columnType = $this->_table->schema()->columnType($key);
+                if ($columnType) {
+                    $converter = SalesforceType::build($columnType);
+                    $properties[$key] = $converter->marshal($value);
+                }
             }
-            $properties[$key] = $value;
         }
 
         if (!isset($options['fieldList'])) {
             $entity->set($properties);
             $entity->errors($errors);
+
             return $entity;
         }
 
@@ -106,6 +110,7 @@ class SalesforceMarshaller extends Marshaller
         }
 
         $entity->errors($errors);
+
         return $entity;
     }
 }

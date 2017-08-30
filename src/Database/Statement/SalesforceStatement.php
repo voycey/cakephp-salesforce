@@ -27,6 +27,7 @@ class SalesforceStatement extends StatementDecorator
     protected $last_rows_affected = 0;
     protected $last_result; //pretty sure this is awful!
     protected $last_row_returned = 0;
+    private $_last_insert_id = [];
 
     /**
      * {@inheritDoc}
@@ -38,8 +39,16 @@ class SalesforceStatement extends StatementDecorator
         $bindings = $this->_statement->valueBinder()->bindings();
 
         //intercept Update here
-        if ($this->_statement->type() == "update") {
-            $result = $this->_driver->client->update([$this->_interpolate($sql, $bindings, true)], $this->_statement->repository()->name);
+        if ($this->_statement->type() == 'update') {
+            $result = $this->_driver->client->update([$this->_buildObjectFromUpdate($sql, $bindings)], $this->_statement->repository()->name);
+            if (empty($result->size)) {
+                $result = (object)json_decode(json_encode($result));
+                $result->size = 1;
+            }
+        } else if ($this->_statement->type() == 'insert') {
+            $result = $this->_driver->client->create([$this->_buildObjectFromInsert($sql, $bindings)], $this->_statement->repository()->name);
+            // TODO: Check for errors, e.g. duplicate record notices
+            $this->_last_insert_id[$this->_statement->repository()->name] = $result[0]->id;
             if (empty($result->size)) {
                 $result = (object)json_decode(json_encode($result));
                 $result->size = 1;
@@ -55,59 +64,88 @@ class SalesforceStatement extends StatementDecorator
 
     /**
      * Helper function used to replace query placeholders by the real
-     * params used to execute the query
+     * params used to execute the query.
      *
-     * @param LoggedQuery $query The query to log
-     * @return mixed
+     * @param string $sql The sql query
+     * @param array $bindings List of placeholder replacement values
+     * @return string
      */
-    protected function _interpolate($sql, $bindings, $sObject = false)
+    protected function _interpolate($sql, $bindings)
     {
         foreach ($bindings as $binding) {
-            $binding['placeholder'] = ":".$binding['placeholder'];
-            switch ($binding['type']) {
-                case "integer":
-                   $sql = preg_replace('/'.$binding['placeholder'].'\b/i', "'".(int)$binding['value']."'", $sql);
-                    break;
-                case "boolean":
-                    $sql = preg_replace('/'.$binding['placeholder'].'\b/i', "'".(int)$binding['value']."'", $sql);
-                    break;
-                case "datetime":
-                    $sql = preg_replace('/'.$binding['placeholder'].'\b/i', "'". $binding['value']."'", $sql);
-                    break;
-                default:
-                    $sql = preg_replace('/'.$binding['placeholder'].'\b/i', "'". addslashes(trim($binding['value']))."'", $sql);
-                    break;
-            }
+            $sql = preg_replace('/:'.$binding['placeholder'].'\b/i', $this->_replacement($binding, true), $sql);
         }
 
-        if ($sObject) {
-            //slice and dice this into an SObject for Salesforce
-            $cleanedSQL = explode("' ", trim(substr($sql, strpos($sql, "SET ") +4 )));
-            $newSQL = [];
-            foreach ($cleanedSQL as $row) {
-
-                //verbose for clarity
-                $string = explode("=", str_replace("'", "", str_replace(", ", " ", $row)));
-                if (empty($string[1])) {
-                    $string[1] = NULL;
-                }
-                //This needs to not be hardcoded "Id"
-                if($string[0] == "WHERE Id ") {
-                    $newSQL['Id'] = trim($string[1]);
-                } else {
-                    $newSQL[trim($string[0])] = trim($string[1]);
-                }
-            }
-
-            //remove empty / null values
-            $newSQL = array_filter($newSQL, 'strlen');
-
-            //return as object
-            return (object)$newSQL;
-        }
         return $sql;
     }
 
+    /**
+     * Helper function used to build an sObject from an update query.
+     *
+     * @param string $sql The sql query
+     * @param array $bindings List of placeholder replacement values
+     * @return mixed
+     */
+    protected function _buildObjectFromUpdate($sql, $bindings)
+    {
+        preg_match('/UPDATE .* SET (.*) WHERE (.*)/', $sql, $parts);
+        $cleanedSQL = explode(' , ', $parts[1]);
+        $cleanedSQL[] = $parts[2];
+        $newSQL = [];
+        foreach ($cleanedSQL as $row) {
+            $string = explode(' = ', $row);
+            $newSQL[trim($string[0])] = $this->_replacement($bindings[trim($string[1])]);
+        }
+
+        //return as object
+        return (object)$newSQL;
+    }
+
+    /**
+     * Helper function used to build an sObject from an insert query.
+     *
+     * @param string $sql The sql query
+     * @param array $bindings List of placeholder replacement values
+     * @return mixed
+     */
+    protected function _buildObjectFromInsert($sql, $bindings)
+    {
+        preg_match('/\((.*)\) VALUES \((.*)\)/', $sql, $blobs);
+        $fields = explode(', ', $blobs[1]);
+        $placeholders = explode(', ', $blobs[2]);
+        $newSQL = [];
+        foreach ($fields as $key => $field) {
+            $newSQL[$field] = $this->_replacement($bindings[$placeholders[$key]]);
+        }
+
+        //remove empty / null values
+        $newSQL = array_filter($newSQL, 'strlen');
+
+        //return as object
+        return (object)$newSQL;
+    }
+
+    protected function _replacement($binding, $quote = false)
+    {
+        switch ($binding['type']) {
+            case 'integer':
+            case 'boolean':
+                return (int)$binding['value'];
+            case 'float':
+                return (float)$binding['value'];
+            case 'datetime':
+            case 'date':
+                $ret = (string)$binding['value'];
+                break;
+            default:
+                $ret = addslashes(trim($binding['value']));
+                break;
+        }
+        if ($quote) {
+            return "'$ret'";
+        }
+        return $ret;
+    }
 
     public function rowCount()
     {
@@ -127,13 +165,12 @@ class SalesforceStatement extends StatementDecorator
      *  print_r($statement->fetch('assoc')); // will show ['id' => 1, 'title' => 'a title']
      * ```
      *
-     * @param string $type 'num' for positional columns, assoc for named columns
+     * @param string $type 'num' for positional columns, 'assoc' for named columns
      * @return mixed Result array containing columns and values or false if no results
      * are left
      */
     public function fetch($type = 'num')
     {
-
         if ($type === 'num') {
             $result = (array)$this->last_result->records[$this->last_row_returned];
         }
@@ -163,7 +200,7 @@ class SalesforceStatement extends StatementDecorator
      */
     public function errorInfo()
     {
-        return "Salesforce Datasource doesnt produce PDO error codes - exceptions are usually thrown";
+        return 'Salesforce Datasource doesnt produce PDO error codes - exceptions are usually thrown';
     }
 
     /**
@@ -176,5 +213,17 @@ class SalesforceStatement extends StatementDecorator
     public function closeCursor()
     {
         return true;
+    }
+
+    /**
+     * Returns the latest primary inserted using this statement.
+     *
+     * @param string|null $table table name or sequence to get last insert value from
+     * @param string|null $column the name of the column representing the primary key
+     * @return string
+     */
+    public function lastInsertId($table = null, $column = null)
+    {
+        return $this->_last_insert_id[$table];
     }
 }
