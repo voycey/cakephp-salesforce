@@ -221,11 +221,7 @@
          * @return array|mixed
          */
         public function read(Model $model, $queryData = array(), $recursive = null) {
-            $limit = "";
             $conditions = array();
-            if (!empty($queryData['limit']) && is_numeric($queryData['limit'])) {
-                $limit = "LIMIT " . $queryData['limit'];
-            }
             if (count($queryData['conditions']) > 0) {
                 foreach ($queryData['conditions'] as $key=>$value) {
                     $conditions[] = $key . " = '" . $value. "'";
@@ -238,17 +234,23 @@
             } else {
                 if(is_array($conditions) && !empty($conditions)) {
                     if (is_array($queryData['fields']) && count($queryData['fields']) > 0) {
-                        $sfq = "SELECT " . implode(",", $queryData['fields']) . " FROM {$model->name} WHERE " . implode(" AND ", $conditions) . " " . $limit;
+                        $sfq = "SELECT " . implode(",", $queryData['fields']) . " FROM {$model->name} WHERE " . implode(" AND ", $conditions);
                     } else {
-                        $sfq = "SELECT " . implode(",", array_keys($model->_schema)) . " FROM {$model->name } WHERE " . implode(" AND ", $conditions) . " " . $limit;
+                        $sfq = "SELECT " . implode(",", array_keys($model->_schema)) . " FROM {$model->name } WHERE " . implode(" AND ", $conditions);
                     }
                 } else {
                     if (is_array($queryData['fields']) && count($queryData['fields']) > 0) {
-                        $sfq = "SELECT " . implode(",", $queryData['fields']) . " FROM {$model->name} " . $limit;
+                        $sfq = "SELECT " . implode(",", $queryData['fields']) . " FROM {$model->name}";
                     } else {
-                        $sfq = "SELECT " . implode(",", array_keys($model->_schema)) . " FROM {$model->name } " . $limit;
+                        $sfq = "SELECT " . implode(",", array_keys($model->_schema)) . " FROM {$model->name }";
                     }
                 }
+            }
+            if (!empty($queryData['limit']) && is_numeric($queryData['limit'])) {
+                $sfq .= " LIMIT " . $queryData['limit'];
+            }
+            if (!empty($queryData['offset']) && is_numeric($queryData['offset'])) {
+                $sfq .= " OFFSET " . $queryData['offset'];
             }
             $results = $this->query($sfq);
             return $this->cakeify_results($model, $results);
